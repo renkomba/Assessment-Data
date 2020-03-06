@@ -24,7 +24,7 @@ Quick, automated grading, and grade analysis for targeted interventions in a tea
 #### The code assumes:
   * Two sheets called "Outline" and "Students" (in that order)
   * "Students" sheet is populated with student period, ID, first, and last name starting on row 4.
-    * I recommend pulling this from another sheet so the info auto-populates as you get new students
+    * Recommend pulling this from another sheet so the info auto-populates as you get new students
   * The "Outline" Sheet has
     * A drop-down list of numbers of formative assessments (ex: numbers 1-4) at column B
     * A formatted table for mapping out each assessment with formulas starting at column C
