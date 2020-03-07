@@ -1,0 +1,385 @@
+function onEdit(e) {
+  var activeSheet = e.source.getActiveSheet();
+  var tabs = ["Outline"];
+  if (tabs.indexOf(activeSheet.getName()) !== -1) {  // if Outline sheet
+    var columns = [2, 3];
+    var cell = e.range;
+    var col = cell.getColumn();
+    var row = cell.getRow();
+    if (columns.indexOf(col) == 0 && row == 1) {  // if new # of formatives
+      console.log("New number of formatives. Creating outline and sheet...")
+      setupOutline();
+      setupAssessments();
+    } else if (columns.indexOf(col) == 1) {  // if box checked
+      if (e.value == "TRUE") {
+        var name = activeSheet.getRange(row, 4).getValue();
+        console.log("Filling out "+name+"...");
+        fill(name);
+      }
+    }
+  }
+}  //♚ for corrections and ♟ for failing
+
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+// A. Set up the "Assessments" sheet
+function setupOutline() {
+  var tests = ss.getSheets()[0];
+  var testAmt = tests.getRange("B1").getValue();
+  var blankRange = tests.getRange("C22:M106");  // clear everything below the first table
+  var header = tests.getRange("D1").getValue();  // get the "Formative 1" header;
+  var row = 1;
+  var rangeToCopy = tests.getNamedRanges()[0].getRange();  // copy C1:M21
+  ungroup();
+  tests.setRowGroupControlPosition(SpreadsheetApp.GroupControlTogglePosition.BEFORE);
+  tests.setColumnGroupControlPosition(SpreadsheetApp.GroupControlTogglePosition.AFTER);
+  tests.showRows(1, tests.getMaxRows());  // unhide all rows
+  blankRange.clear();  // clear the values and formatting of the blank range before writing onto them
+  for (var i=0; i<testAmt; i++) {  // run the following code one fewer times than there are formatives
+    row += 21;  // row == 22, 43, etc.
+    rangeToCopy.copyTo(tests.getRange(row, 3, 20, 11));  // copy to C21:M40, or C41...
+    var borderRange = tests.getRange(row, 3, 1, 11);
+    borderRange.setBorder(true, null, null, null, null, null, "#4c1130", SpreadsheetApp.BorderStyle.SOLID_THICK);
+    var test = tests.getRange(row+1, 3, 20, 11);
+    test.shiftRowGroupDepth(1);
+    tests.getRange(row, 1).setValue("grouped").setFontColor("white");
+    if (i == (testAmt-1)) {
+      tests.getRange(row, 4).setValue("Summative");
+    } else {
+      tests.getRange(row, 4).setValue(header.replace("1",(i+2)));  // set header of copied cell and change the 1 to 2, 3, etc.
+    }
+  }
+  var br = tests.getLastRow();  // bottom row
+  tests.hideRows(br+1, tests.getMaxRows()-br);
+}
+
+// B. create assessment sheets
+function setupAssessments() {
+  clearAway();  // remove existing formative/summative sheets
+  createF1();   // create 3rd sheet "F1"
+  createFormativeSheets();  // duplicate F1 and rename it for each sheet
+}
+
+// C. fill sheet
+function fill(sheetName) {
+  var num = getIndex(sheetName);
+  matchColumns(sheetName, num);
+  label(sheetName, num);
+  addFormulas(sheetName, num);
+}
+
+// A1. ungroup rows
+function ungroup() {
+  var tests = ss.getSheets()[0];
+  var rows = [22, 43, 64, 85];
+  for (var row of rows) {
+    var trigger = tests.getRange(row, 1).getValue();
+    var title = tests.getRange(row+1, 3).getValue();
+    if (trigger == "grouped" && title == "#") {
+      var group = tests.getRowGroup(row+1, 1);
+      group.remove();
+      tests.getRange(row, 1).clear();
+    }
+  }
+}
+
+// B1. Delete sheets
+function clearAway() {
+  var sheets = ss.getSheets();
+  if (sheets.length > 2) {  // if there are more than 2 sheets
+    for (var i=2; i<sheets.length; i++) {  // starting at index 2 (3rd sheet)
+      ss.deleteSheet(sheets[i]);  // delete the sheet
+    }
+  }
+}
+
+// B2. Create Formative 1 Page
+function createF1() {
+  var f1Title = getOutlineInfo()[2][18][0];
+  ss.insertSheet(f1Title, 2);  // insert sheet called "F1" after "Students"
+  populatef1();
+  formatSheet();
+}
+
+// B3. Populate Formative 1 sheet
+function populatef1() { 
+  var sheets = ss.getSheets();
+  // 0 (per, sec num, end index), 1 (same w/ start index), 2 (irrelevant), 3-end (student info)
+  var rangeToCopy = sheets[1].getDataRange().getValues();  // student info
+  var class2Len = rangeToCopy[1][1];
+  var class1Len = rangeToCopy[0][1];
+  var totClassLen = rangeToCopy[1][3]-2;
+  var f1 = sheets[2];
+  var maxRows = f1.getMaxRows();
+  var maxCol = f1.getMaxColumns();
+  var copyToRange = f1.getRange(4, 1, totClassLen, 4);
+  ss.setActiveSheet(f1);  // set "Formative 1" as active sheet
+  copyToRange.setValues(rangeToCopy.slice(3));
+  f1.setFrozenColumns(5);  // freeze student info and % column
+  f1.setFrozenRows(3);  // freeze all rows with header
+  f1.setColumnGroupControlPosition(SpreadsheetApp.GroupControlTogglePosition.AFTER);
+  f1.getRange(1, 3, maxRows, 2).shiftColumnGroupDepth(3);
+  f1.getRange(1, 2, maxRows).shiftColumnGroupDepth(2);
+  f1.getRange(1, 1, maxRows).shiftColumnGroupDepth(1);
+  var class2 = f1.getRange(class2Len-1, 1, class2Len, maxCol);
+  var class1 = f1.getRange(4, 1, class1Len, maxCol);
+  class2.shiftRowGroupDepth(1);
+  class1.shiftRowGroupDepth(2);
+  var emptyRow = totClassLen+4;
+  f1.hideRows(emptyRow, maxRows-emptyRow+1);
+}
+
+// B4. Format sheet
+function formatSheet() {
+  var sheets = ss.getSheets();
+  var f1 = sheets[2];
+  var rows = f1.getMaxRows();
+  var headers = ["P.", "ID", "First", "Last", "Total"];
+  var columns = f1.getMaxColumns();
+  f1.getRange(1, 1, 3, columns)  // change first 3 rows
+    .setFontColor("white")
+    .setFontSize(12)
+    .setFontWeight("bold")
+    .setBackground("#a64d79");
+  f1.getRange(2, 5, 1, columns)
+    .setBackground("#741b47");  // change part of 2nd row "dark magenta 2"
+  f1.getRange(3, 5, 1, columns)
+    .setBackground("#4c1130");  // change part of 3rd row "dark magenta 3"
+  f1.getRange(3, 1, 1, 4).setFontSize(10).setBackground("#741b47");  // change 3rd row
+  f1.getRange(4, 1, f1.getLastRow(),columns)
+    .clearFormat()
+    .applyRowBanding(SpreadsheetApp.BandingTheme.PINK, false, false);
+  f1.getRange(4, 22, rows, 5).copyTo(f1.getRange(4, 27, rows, 5));
+  f1.getRange(1, 1, rows, f1.getMaxColumns())
+    .setHorizontalAlignment("center");  // center all text
+  f1.getRange(1, 3, rows, 2)
+    .setHorizontalAlignment("left");  // except in B:C
+  for (var i=1; i<5; i++) {
+    f1.getRange(3, i).setValue(headers[i-1]);  // get column-3 and set it to headers[i-1]
+  }
+  f1.getRange(2, 5).setValue(headers[4]);
+  f1.autoResizeColumns(1, 5);
+  f1.setTabColor("pink");
+  f1.getRange(3, 1, rows-1, columns).createFilter();
+}
+
+// B5. Create formative and summative calculation sheets based on info in the "Assessments" sheet
+function createFormativeSheets() {
+  var sheets = ss.getSheets();
+  var numOfAssessments = sheets[0].getRange("B1").getValue();
+  var sheetName = [];
+  var row = 1;
+  ss.setActiveSheet(sheets[2]);
+  for (var t=0; t < numOfAssessments; t++) {
+    sheetName.push(sheets[0].getRange(row, 4).getValue());
+    row += 21;
+  }
+  for (var i=0; i<numOfAssessments; i++) {  // run the following code for the number of formatives + the summative
+    SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet();  // duplicate "F1"
+    sheets = ss.getSheets();
+    var sheet = sheets[i+3];  // get new duplicated sheet
+    sheet.setName(sheetName[i]);  // name it the table title
+  }
+  ss.getSheetByName("Summative").setTabColor("#4c1130");
+}
+
+// C1. get an index to pull correctly from arrays for each sheet
+function getIndex(sheetName) {
+  if (sheetName == "Summative") {
+    return (ss.getSheets()[0].getRange("B1").getValue());
+  } else {
+    console.log("Name: " + sheetName);
+    console.log("Last letter: " + sheetName.slice(10));
+    return sheetName.slice(10)-1;  // turn formative number into int
+  }
+}
+
+// C2. Get the proper amount of colums
+function matchColumns(sheetName, num) {
+  var sheet = ss.getSheetByName(sheetName);
+  var f1 = ss.getSheets()[2];
+  var outline = getOutlineInfo();
+  if (num == 4) {
+    var len = outline.length;
+    var neededColumns = [outline[-len][17][6]];
+  } else {
+    var neededColumns = [outline[num+2][17][6]];  // the number of columns needed per test
+  }
+  var currentColumns = sheet.getMaxColumns();  // find how many columns in the sheet
+  if (currentColumns != neededColumns) {  // create or delete columns
+    if (currentColumns < neededColumns) {  // if not enough columns
+      var dif = neededColumns - currentColumns;
+      var copyRange = sheet.getRange(1, (currentColumns - dif), f1.getMaxRows(), dif);
+      sheet.insertColumns(sheet.getMaxColumns(), dif);  // add needed amount at end
+      copyRange.copyTo(sheet.getRange(1, (currentColumns + 1), f1.getMaxRows(), dif)); // copy format onto new additions
+    } else {  // if too many columns
+      var dif = currentColumns-neededColumns;
+      sheet.deleteColumns(neededColumns, dif);
+    }
+  }
+}
+
+// C3. set all headers and make groups
+function label(sheetName, num) {
+  var sheet = ss.getSheetByName(sheetName);
+  var tests = ss.getSheets()[0];
+  var outline = getOutlineInfo()[num+2];
+  var gradingColumns = outline[15][6];
+  var gradingStart = outline[16][6]+1;
+  var numOfSections = outline[16][0];
+  var headersAndPoints = [[],[]];  // i-0 is section letter, i-1 is point value
+  var questions = [[],[]];
+  var rows = [[18, 19, 20, 3], [39, 40, 41, 24],  // 0-section headers, 1-section points
+             [60, 61, 62, 45], [81, 82, 83, 66],  // 2-bonus per section & total points
+             [102, 103, 104, 87]];  // 3-first row of measures
+  var cl = ["E","F", "G", "H", "I", "J"];  // section column letters
+  var lineIndex = 0;
+  var colIndex = 0;
+  var section;
+  sheet.getRange(3, gradingStart-1).setValue("✓");
+  sheet.getRange(4, gradingStart-1, sheet.getMaxRows()-4, 1).insertCheckboxes();
+  if (numOfSections > 1) { // if more than one section, else overall is all we need
+    for (var line of outline) {
+      var column = gradingStart + colIndex;
+      var row = rows[num][3] + lineIndex;
+      if (line[0] == "" || line[0] == "SECTIONS") {
+        break;
+      } else {
+        for (var m=0; m<5; m++) {
+          if (m == 0) {
+            if (section != line[m]) {  // if it's a new section
+              section = line[m];
+              sheet.getRange(1, column, sheet.getMaxRows())
+              .setBorder(null, true, null, null, null, null, "#ead1dc", SpreadsheetApp.BorderStyle.DOUBLE);
+              questions[0].push(line[m]);  // add section letter to array
+            } else {
+              questions[0].push("");
+            }
+          } else if (line[m] == "") {  // or if measure is blank
+            sheet.getRange(1, column, sheet.getMaxRows())
+                 .setBorder(null, null, null, true, null, null, "#ead1dc", SpreadsheetApp.BorderStyle.DASHED);
+            lineIndex++;
+            break;  // move to the next line
+          } else {
+            if (m > 1) {  // if it isn't the first measure
+              questions[0].push("");
+            }
+            questions[1].push("=Outline!"+cl[m]+row);
+            colIndex++;
+          }
+        }
+      }
+    }
+    for (var i=0; i<numOfSections; i++) {  // for each section
+      headersAndPoints[0].push("=Outline!"+cl[i+1]+rows[num][0]);  // add reference to section letter to array
+      headersAndPoints[1].push("=Outline!"+cl[i+1]+rows[num][1]);  // same for section points
+      console.log("Headers and Points: "+headersAndPoints);
+      if (i == (numOfSections - 1)) {  // if last section
+        var lastSection = sheet.getRange(1, 5+numOfSections, sheet.getMaxRows(), 1);
+        lastSection.setBorder(null, null, null, true, null, null, "#4c1130", SpreadsheetApp.BorderStyle.SOLID_THICK);
+        var afterGraded = sheet.getRange(1, 6+numOfSections, sheet.getMaxRows(), 1);
+        afterGraded.setBorder(null, null, null, true, null, null, "#4c1130", SpreadsheetApp.BorderStyle.SOLID_THICK);
+      }
+    }
+  }
+  sheet.getRange(2, 6, 2, numOfSections).setValues(headersAndPoints);
+  sheet.getRange(1, gradingStart, 2, gradingColumns).setValues(questions);
+  sheet.getRange(3, 5).setValue("=Outline!M"+rows[num][0]);
+}
+
+// C4. 
+function addFormulas(sheetName, num) {
+  var sheets = ss.getSheets();
+  var sheet = ss.getSheetByName(sheetName);
+  var outline = getOutlineInfo()[num+2];
+  var numOfSections = outline[16][0];
+  var start = outline[16][6] + 1;
+  var span = outline[15][6];
+  var end = start + span - 1;
+  var sections = outline[15].slice(1, 5);
+  var secPoints = outline[16].slice(1, 5);
+  var secBonus = outline[17].slice(1, 5);
+  var cl = [0,"A","B","C","D","E","F","G","H","I","J",
+           "K","L","M","N","O","P","Q","R","S","T","U",
+           "V","W","X","Y","Z","AA","AB","AC","AD","AE",
+           "AF","AG","AH","AI","AJ","AK","AL","AM","AN",
+           "AO","AP","AQ","AR","AS","AT","AU","AV","AW",
+           "AX","AY","AZ"];
+  var cb = cl[start-1];  // checkbox column letter
+  var cbRef = cb+"4"; // checkbox cell
+  var colIndex = 6;
+  var formulae = [[]];
+  var rules = sheet.getConditionalFormatRules();
+  var range = sheet.getRange(4, start, sheet.getMaxRows()-3, span);
+  var rule1 = SpreadsheetApp.newConditionalFormatRule()
+      .whenFormulaSatisfied("=$"+cbRef+" = FALSE")
+      .setBackground("#4c1130")
+      .setFontColor("#4c1130")
+      .setRanges([range])
+      .build();
+  var rule2 = SpreadsheetApp.newConditionalFormatRule()
+      .whenCellNotEmpty()
+      .setBackground("#4c1130")
+      .setFontColor("white")
+      .setRanges([range])
+      .build();
+  rules.push(rule1);
+  rules.push(rule2);
+  range.setHorizontalAlignment("center");
+  formulae[0].push("=if("+cbRef+"=true; countif("+cl[start]+"4:"+cl[end]+"4; \"\") / E$3; \"\")");
+  for (var i in sections) {  // for each index in "sections" array
+    if (sections[i] == "") {
+      break;
+    } else {
+      var col = cl[colIndex];
+      var secSpan = secPoints[i] + secBonus[i] - 1;  // calc span of section
+      end = cl[start + secSpan] + "4";  // create final cell ref string
+      var calcRef = cl[start] + "4:" + end;  // create range reference string
+      var ifTrue = "countif("+calcRef+ "; \"\") / "+col+"$3";
+      formulae[0].push("=if("+cbRef+"=true; "+ifTrue+"; \"\")");
+      start += secSpan + 1;  // setup next section start
+      colIndex++;
+    }
+  }
+  sheet.getRange(4, 5, 1, numOfSections+1).setFormulas(formulae);
+  sheet.setConditionalFormatRules(rules);
+  sheet.autoResizeColumns(1, sheet.getMaxColumns());
+  if (numOfSections > 1) { // if more than one section, else overall is all we need
+    var remainder = numOfSections % 2;
+    if (remainder == 0) {  // if an even # of sections
+      sheet.getRange(1, (5+(numOfSections/2))).setValue("=Outline!e18");  // write "SECTIONS" in first row
+    } else {  // if 3 sections
+      sheet.getRange(1, 7).setValue("=Outline!e18");
+    }
+  }
+  var rows = sheet.getMaxRows();
+  var copyFrom = sheet.getRange(4, 5, 1, numOfSections+1);
+  var copyTo = sheet.getRange(5, 5, rows-4, numOfSections+1)
+  sheet.setColumnWidths(5, 4, 50);
+  sheet.getRange(4, 5, rows-3, numOfSections+1).setNumberFormat("0.00%");
+  copyFrom.copyTo(copyTo);
+}
+
+// C*. convert Assessments sheet to array
+function getOutlineInfo() {
+  var tests = ss.getSheets()[0];
+  var testAmt = tests.getRange("B1").getValue()+1;
+  var row = [3, 24, 45, 66, 87];
+  var outlineArray = [["pass"], ["pass"]];
+  for (var i=0; i<=testAmt; i++) {  // for as many sheets as there are tests
+    var header = tests.getRange(row[i]-2, 5-1).getValue();  // get title in title cell
+    // lines - 0-14 questions, 15 (sec headers, points col, out of), 16 (sec points, extra, tot bonus), 17 (bonus, total col), 18 (title, testAmt)
+    // vertical - 0 (sec # & letters), 1-5 (measures, subsec points), 6 (col)
+    var outline = tests.getRange(row[i], 5, 18, 9).getValues();  // get important cell data
+    var topRow = [header, testAmt];  // assessment title and number of tests
+    outline.push(topRow);       // add these^ to the bottom of outline array
+    if (i == 0) { // if "Formative 1"
+      outlineArray.push(outline); // add the whole array to outlineArray
+    } else if (outline[0][0] == "") {  // if this table is blank
+      break;                           // end the loop
+    } else {
+      outlineArray.push(outline);  // add the whole array to outlineArray
+    }
+  }
+  return outlineArray;  // output the array collection
+}
