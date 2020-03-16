@@ -74,7 +74,7 @@ function formatSheet(sheets) {
   }
   f1.getRange(2, 6).setValue(headers[5]);
   f1.autoResizeColumns(1, 5);
-  f1.setTabColor(colour.plain);
+  f1.setTabColor(colour.deep);
 }
 
 // B5. Create formative and summative calculation sheets based on info in the "Assessments" sheet
