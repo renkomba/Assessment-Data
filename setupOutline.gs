@@ -28,6 +28,7 @@ function clean(outline) {
 // A3. spawn assessment outlines
 function spawnOutlines(outline, format) {
   var info = outline.getRange("B2:D2").getValues();
+  var colour = findColour(outline);
   var row = 23;
   var testAmt = info[0][0]; // # of outline
   var header = info[0][2];  // get the "Formative 1" header;
@@ -36,7 +37,7 @@ function spawnOutlines(outline, format) {
     if (format) {
       var bandingRange = outline.getRange((row+2), 3);
       var banding = bandingRange.getBandings()[0];
-      banding.remove();
+      banding.setSecondRowColor(colour.lightest);
       rangeToCopy.copyFormatToRange(outline, 3, 13, row, (row+20));
     } else {
       rangeToCopy.copyTo(outline.getRange(row, 3, 20, 11));  // copy to C23:M43, or C44...
