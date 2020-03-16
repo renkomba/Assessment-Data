@@ -49,6 +49,7 @@ function formatSheet(sheets) {
   var headers = ["Teacher", "P.", "ID", "First", "Last", "Total"];
   var columns = f1.getMaxColumns();
   var colour = findColour(ss.getSheets()[0]);
+  var defaultBanding = SpreadsheetApp.BandingTheme.LIGHT_GREY;
   var bandingRange = f1.getRange(4, 1, f1.getLastRow(), columns);
   f1.getRange(1, 1, 3, columns)  // change first 3 rows
     .setFontColor("white")
@@ -60,13 +61,8 @@ function formatSheet(sheets) {
   f1.getRange(3, 6, 1, columns)
     .setBackground(colour.dark);  // change part of 3rd row dark colour
   f1.getRange(3, 1, 1, 5).setFontSize(10).setBackground(colour.deep);  // change 3rd row
-  if (colour.name == "red") {
-    bandingRange.clearFormat()
-    .applyRowBanding(pink.banding, false, false)
-    .setFirstRowColor("#fddcdc");
-  } else {
-    bandingRange.applyRowBanding(colour.banding, false, false);
-  }
+  bandingRange.applyRowBanding(defaultBanding, false, false)
+              .setSecondRowColor(colour.lightest);
   f1.getRange(4, 22, rows, 5).copyTo(f1.getRange(4, 27, rows, 5));
   columns = f1.getMaxColumns();
   f1.getRange(1, 1, rows, columns)
