@@ -12,7 +12,6 @@ function onEdit(e) {
         if (cell != "- - - - -") {
           console.log("New number of formatives. Creating outline and sheet...")
           setupOutline();
-          activeSheet.getRange("B3").setValue("- - - - -");
         }
       } else if (row == 3) {
         changeColour();
