@@ -96,7 +96,7 @@ function label(outline, sheetName, num) {
       headersAndPoints[1].push("=Outline!"+cl[i+1]+rows[num][1]);  // same for section points
       if (i == (numOfSections - 1)) {  // if last section
         var afterGraded = sheet.getRange(1, 7+numOfSections, sheet.getMaxRows(), 1);  // insert dark magenta border
-        afterGraded.setBorder(null, true, null, true, null, null, "#4c1130", SpreadsheetApp.BorderStyle.SOLID_THICK);
+        afterGraded.setBorder(null, true, null, true, null, null, colour.dark, SpreadsheetApp.BorderStyle.SOLID_THICK);
       }
     }
   }
