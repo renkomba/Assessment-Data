@@ -1,0 +1,83 @@
+var ss = SpreadsheetApp.getActiveSpreadsheet();
+
+// D1. 
+function findColour(outline) {
+  var bandingRange = outline.getRange(4, 3, 15, 11);
+  var redBanding = bandingRange.getBandings()
+  var pink = {name: "pink", lighter: "#d5a6bd", light: "#c27ba0",
+              plain: "#a64d79", deep: "#741b47", dark: "#4c1130",
+              banding: SpreadsheetApp.BandingTheme.PINK};
+  var purple = {name: "purple", lighter: "#b4a7d6", light: "#8e7cc3",
+                plain: "#674ea7", deep: "#351c75", dark: "#20124d",
+                banding: SpreadsheetApp.BandingTheme.INDIGO};
+  var blue = {name: "blue", lighter: "#9fc5e8", light: "#6fa8dc",
+              plain: "#3d85c6", deep: "#0b5394", dark: "#073763",
+              banding: SpreadsheetApp.BandingTheme.BLUE};
+  var teal = {name: "teal", lighter: "#a2c4c9", light: "#76a5af",
+              plain: "#45818e", deep: "#134f5c", dark: "#0c343d",
+              banding: SpreadsheetApp.BandingTheme.CYAN};
+  var green = {name: "green", lighter: "#b6d7a8", light: "#93c47d",
+               plain: "#6aa84f", deep: "#38761d", dark: "#274e13",
+               banding: SpreadsheetApp.BandingTheme.GREEN};
+  var yellow = {name: "yellow", lighter: "#ffe599", light: "#ffd966",
+                plain: "#f1c232", deep: "#bf9000", dark: "#7f6000",
+                banding: SpreadsheetApp.BandingTheme.YELLOW};
+  var orange = {name: "orange", lighter: "#f9cb9c", light: "#f6b26b",
+                plain: "#e69138", deep: "#b45f06", dark: "#783f04",
+                banding: SpreadsheetApp.BandingTheme.ORANGE};
+  var red = {name: "red", lighter: "#dd7e6b", light: "#cc4125",
+             plain: "#a61c00", deep: "#85200c", dark: "#5b0f00",
+             banding: SpreadsheetApp.BandingTheme.PINK};
+  var grey = {name: "grey", lighter: "#cccccc", light: "#b7b7b7",
+              plain: "#999999", deep: "#666666", dark: "#434343",
+             banding: SpreadsheetApp.BandingTheme.GREY};
+  var colours = [pink, purple, blue, teal, green,
+                 yellow, orange, red, grey];
+  var colourString = outline.getRange("B3").getValue();
+  if (colourString == "- - - - -") {
+    return pink;
+  } else {
+    for (var colour of colours) {
+      if (colour.name == colourString) {
+        return colour;
+      }
+    }
+  }
+}
+
+// D2. 
+function setBackgrounds(outline, colour) {
+  var darkRange = outline.getRangeList(["A1:C1", "A6"]);
+  var deepRange = outline.getRangeList(["C3:M3", "A5", "A13"]);
+  var plainRange = outline.getRangeList(["C2:M2", "A4", "C19:I19", "C20:D21",
+                                         "E21", "J19:J21", "L19:L21"]);
+  var lightRange = outline.getRange("A3");
+  var lighterRange = outline.getRange("A2");
+  var bandingRange = outline.getRange("C4:M18");
+  var banding = bandingRange.getBandings()[0];
+  darkRange.setBackground(colour.dark);
+  deepRange.setBackground(colour.deep);
+  plainRange.setBackground(colour.plain);
+  lightRange.setBackground(colour.light);
+  lighterRange.setBackground(colour.lighter);
+  banding.remove();
+  if (colour.name == "red") {
+    bandingRange.applyRowBanding(colour.banding, false, false)
+    .setSecondRowColor("#fddcdc");
+  } else {
+    bandingRange.applyRowBanding(colour.banding, false, false);
+  }
+}
+
+function setBorders(outline, colour) {
+  var middleHorizontal = outline.getRangeList(["C1:M2", "C18:M19", "C21:M22"]);
+  var solidRight = outline.getRange("M1:M21");
+  var middleVertical = outline.getRangeList(["B2:C21", "J4:M18"]);
+  var doubleRight = outline.getRange("C4:D18");
+  var solid = SpreadsheetApp.BorderStyle.SOLID_THICK;
+  var double = SpreadsheetApp.BorderStyle.DOUBLE;
+  middleHorizontal.setBorder(null, null, null, null, null, true, colour.dark, solid);
+  middleVertical.setBorder(null, null, null, null, true, null, colour.dark, solid);
+  solidRight.setBorder(null, null, null, true, null, null, colour.dark, solid);
+  doubleRight.setBorder(null, null, null, null, true, null, colour.dark, double);
+}
