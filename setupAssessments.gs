@@ -25,8 +25,9 @@ function populatef1(sheets) {
   var f1 = sheets[2];
   // 0 (per, sec num, end index), 1 (same w/ start index), 2 (irrelevant), 3-end (student info)
   var rangeToCopy = students.getRange("A1").getDataRegion().getValues();  // student info
-  var classInfo = students.getRange("H1").getDataRegion().getValues();  // teachers, students per class
+  var classInfo = students.getRange("H1").getDataRegion().getValues().slice(1);  // teachers, students per class
   var rowNum = 4;
+  var group = 1;
   var studentInfo = rangeToCopy.slice(1);
   var totClassLen = students.getLastRow()-1;
   var maxRows = f1.getMaxRows();
@@ -41,18 +42,13 @@ function populatef1(sheets) {
   f1.getRange(1, 3, maxRows).shiftColumnGroupDepth(2);
   f1.getRange(1, 1, maxRows, 2).shiftColumnGroupDepth(1);
   classInfo.forEach(function(row) { // for each teacher
-    var i = 2;                 // index of first prep
-    var preps = row[1] + i;    // classes per teacher
-    for (i; i < preps; i++) {  // for each prep
-      if (row[i]) {            // if not blank
-        var period = row[i];   // class period
-        var classLen = row[i+5];  // # of students
-        var prep = f1.getRange(rowNum, 1, classLen, maxCol);
-        rowNum += classLen;
-        prep.shiftRowGroupDepth(i-1);
-      }
-    }
-  })
+    console.log(row);
+    var totStudents = row[12];
+    var teacher = f1.getRange(rowNum, 1, totStudents, maxCol);
+    teacher.shiftRowGroupDepth(group);
+    rowNum += totStudents;
+    group++;
+  });
   var emptyRow = totClassLen+4;
   f1.hideRows(emptyRow, maxRows-emptyRow+1);
 }
