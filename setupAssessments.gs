@@ -24,11 +24,11 @@ function populatef1(sheets) {
   var students = sheets[1];
   var f1 = sheets[2];
   // 0 (per, sec num, end index), 1 (same w/ start index), 2 (irrelevant), 3-end (student info)
-  var rangeToCopy = sheets[1].getRange("A1").getDataRegion().getValues();  // student info
+  var rangeToCopy = students.getRange("A1").getDataRegion().getValues();  // student info
   var classInfo = students.getRange("H1").getDataRegion().getValues();  // teachers, students per class
   var rowNum = 4;
   var studentInfo = rangeToCopy.slice(1);
-  var totClassLen = sheets[1].getLastRow()-1;
+  var totClassLen = students.getLastRow()-1;
   var maxRows = f1.getMaxRows();
   var maxCol = f1.getMaxColumns();
   var copyToRange = f1.getRange(4, 1, totClassLen, 5);
