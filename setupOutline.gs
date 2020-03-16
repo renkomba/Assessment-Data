@@ -40,7 +40,6 @@ function spawnOutlines(outline, format) {
       rangeToCopy.copyFormatToRange(outline, 3, 13, row, (row+20));
     } else {
       rangeToCopy.copyTo(outline.getRange(row, 3, 20, 11));  // copy to C23:M43, or C44...
-      var borderRange = outline.getRange(row, 3, 1, 11);
       var test = outline.getRange(row+1, 3, 20, 11);
       test.shiftRowGroupDepth(1);
       outline.getRange(row, 1).setValue("grouped").setFontColor("white");
