@@ -10,11 +10,13 @@ function onEdit(e) {
     if (columns.indexOf(col) == 0) {
       if (row == 2) {  // if new # of formatives
         if (cell != "- - - - -") {
-          console.log("New number of formatives. Creating outline and sheet...")
           setupOutline();
         }
-      } else if (row == 3) {
+      } else if (row == 3) {  // if new colour
         changeColour();
+        if (!activeSheet.getRange("D23").isBlank()) {  // if outline already set up
+          spawnOutlines(activeSheet, true);  // copy formatting down
+        }
       } else if (row == 5) {
         if (e.value == "TRUE") {
           setupAssessments();
@@ -23,7 +25,6 @@ function onEdit(e) {
     } else if (columns.indexOf(col) == 1) {  // if box checked
       if (e.value == "TRUE") {
         var name = activeSheet.getRange(row, 4).getValue();
-        console.log("Filling out "+name+"...");
         fill(name);
       }
     }
@@ -48,7 +49,7 @@ function setupOutline() {
   var outline = ss.getSheets()[0];
   ungroup(outline);
   clean(outline);
-  spawnOutlines(outline)
+  spawnOutlines(outline, false)
   hideInOutline(outline);
 }
 

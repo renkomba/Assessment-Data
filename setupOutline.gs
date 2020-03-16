@@ -26,22 +26,29 @@ function clean(outline) {
 }
 
 // A3. spawn assessment outlines
-function spawnOutlines(outline) {
+function spawnOutlines(outline, format) {
   var info = outline.getRange("B2:D2").getValues();
   var row = 23;
   var testAmt = info[0][0]; // # of outline
   var header = info[0][2];  // get the "Formative 1" header;
   var rangeToCopy = outline.getNamedRanges()[0].getRange();  // copy C2:M22
   for (var i=0; i<testAmt; i++) {  // run the following code one fewer times than there are formatives
-    rangeToCopy.copyTo(outline.getRange(row, 3, 20, 11));  // copy to C23:M43, or C44...
-    var borderRange = outline.getRange(row, 3, 1, 11);
-    var test = outline.getRange(row+1, 3, 20, 11);
-    test.shiftRowGroupDepth(1);
-    outline.getRange(row, 1).setValue("grouped").setFontColor("white");
-    if (i == (testAmt-1)) {
-      outline.getRange(row, 4).setValue("Summative");
+    if (format) {
+      var bandingRange = outline.getRange((row+2), 3);
+      var banding = bandingRange.getBandings()[0];
+      banding.remove();
+      rangeToCopy.copyFormatToRange(outline, 3, 13, row, (row+20));
     } else {
-      outline.getRange(row, 4).setValue(header.replace("1",(i+2)));  // set header of copied cell and change the 1 to 2, 3, etc.
+      rangeToCopy.copyTo(outline.getRange(row, 3, 20, 11));  // copy to C23:M43, or C44...
+      var borderRange = outline.getRange(row, 3, 1, 11);
+      var test = outline.getRange(row+1, 3, 20, 11);
+      test.shiftRowGroupDepth(1);
+      outline.getRange(row, 1).setValue("grouped").setFontColor("white");
+      if (i == (testAmt-1)) {
+        outline.getRange(row, 4).setValue("Summative");
+      } else {
+        outline.getRange(row, 4).setValue(header.replace("1",(i+2)));  // set header of copied cell and change the 1 to 2, 3, etc.
+      }
     }
     row += 21;  // row == 44, 65, etc.
   }
