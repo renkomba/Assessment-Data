@@ -108,7 +108,7 @@ function label(outline, sheetName, num) {
 // C4. 
 function addFormulas(outline, sheetName, num) {
   var sheet = ss.getSheetByName(sheetName);
-  var outline = getOutlineInfo()[num+2];
+  var colour = findColour(ss.getSheets()[0]);
   var numOfSections = outline[16][0];
   var start = outline[16][6] + 2;
   var span = outline[15][6];
@@ -130,13 +130,13 @@ function addFormulas(outline, sheetName, num) {
   var range = sheet.getRange(4, start, sheet.getMaxRows()-3, span);
   var rule1 = SpreadsheetApp.newConditionalFormatRule()
       .whenFormulaSatisfied("=$"+cbRef+" = FALSE")
-      .setBackground("#4c1130")
-      .setFontColor("#4c1130")
+      .setBackground(colour.dark)
+      .setFontColor(colour.dark)
       .setRanges([range])
       .build();
   var rule2 = SpreadsheetApp.newConditionalFormatRule()
       .whenCellNotEmpty()
-      .setBackground("#4c1130")
+      .setBackground(colour.dark)
       .setFontColor("white")
       .setRanges([range])
       .build();
