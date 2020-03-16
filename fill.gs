@@ -108,7 +108,6 @@ function label(outline, sheetName, num) {
 // C4. 
 function addFormulas(outline, sheetName, num) {
   var sheet = ss.getSheetByName(sheetName);
-  var outline = getOutlineInfo()[num+2];
   var numOfSections = outline[16][0];
   var start = outline[16][6] + 2;
   var span = outline[15][6];
