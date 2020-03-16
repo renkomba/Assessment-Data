@@ -35,8 +35,8 @@ Quick, automated grading, and grade analysis for targeted interventions in a tea
   * Autocalculate student grade
   * Sort student performance by teacher
   * View performance on each section
+  * Customizable colour (to distinguish units?)
 #### To do
   * *Sort student performance by teacher*
   * *Data analysis (who got best results)*
-  * *Customizable colour (to distinguish units?)*
   * *Compare formative and summative*
