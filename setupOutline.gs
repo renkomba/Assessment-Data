@@ -46,7 +46,7 @@ function spawnOutlines(outline, format) {
       if (i == (numOfAssessments-1)) {
         outline.getRange(row, 4).setValue('Summative');
       } else {
-        header = header.replace('1',(i+2));  // increase the last number of header
+        header = header.replace((i+1),(i+2));  // increase the last number of header
         outline.getRange(row, 4).setValue(header);
       }
     }

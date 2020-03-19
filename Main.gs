@@ -37,7 +37,7 @@ function onEdit(e) {
     } else if (columns.indexOf(column) == 1) {  // if column 'C'
       if (e.value == 'TRUE') {  // if box is checked
         let sheetName = activeSheet.getRange(row, 4).getValue();
-        let sheet = ss.getSheetByName(name)
+        let sheet = ss.getSheetByName(sheetName);
         fill(sheet, sheetName);
       }
     }
@@ -77,11 +77,10 @@ function setupAssessments() {
 function fill(sheet, sheetName) {
   let num = getIndex(sheetName);          // test sheet 'index'
   let outline = matchColumns(sheet, num); // outline == array of 'Outline' tables
-  label(outline, sheet, num);
   addFormulas(outline, sheet);
   formatOnCondition(outline, sheet, false);
   formatFilledSheet(outline, sheet);
-  labelHeaders(outline, sheet);
+  labelHeaders(outline, sheet, (num+1));
   labelQuestions(outline, sheet, num)
 }
 

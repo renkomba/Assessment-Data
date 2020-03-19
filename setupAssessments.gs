@@ -83,16 +83,16 @@ function createFormativeSheets(sheets) {
   ss.setActiveSheet(sheets[2]);
   let colour = findColour(sheets[0]);
   let names = sheets[0].getRange('A8:A11').getValues();  // assessments after 'Formative 1'
+  console.log('Names: ' + names);
   for (let name of names) {
-    console.log('Name: ' + name + ' of ' + names);
-    if (name !== '') {
-      let len = sheets.length;
-      SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet();  // duplicate 'F1'
-      sheets = ss.getSheets();
-      let sheet = sheets[len];  // get new duplicated sheet
-      sheet.setName(name);  // name it the table title
-      if (name == 'Summative') sheet.setTabColor(colour.dark);
-    }
+    console.log('Name: ' + name);
+    if (name == '') break;
+    let len = sheets.length;
+    SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet();  // duplicate 'F1'
+    sheets = ss.getSheets();
+    let sheet = sheets[len];  // get new duplicated sheet
+    sheet.setName(name);  // name it the table title
+    if (name == 'Summative') sheet.setTabColor(colour.dark);
   }
   ss.getSheetByName('Outline').activate();
 }

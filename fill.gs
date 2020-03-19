@@ -41,24 +41,26 @@ function getMeasures(outline) {
 }
 
 // C3
-function labelHeaders(outline, sheet) {
+function labelHeaders(outline, sheet, num) {
   let numOfSections = outline[16][0];
   let headersAndPoints = [[],[]];
   let sectionLetter = headersAndPoints[0];
   let sectionPoints = headersAndPoints[1];
-  let cellInfo = [['M', 19, 'E'], ['F', 19, 20], ['G', 40, 41],
-                  ['H', 61, 62], ['I', 82, 83], ['J', 103, 104]];
-  let outlineSheet = '=Outline!';
+  let cellInfo = [['M', 'F', 'G', 'H', 'I', 'J', 'E'], [19, 20],
+                  [40, 41], [61, 62], [82, 83], [103, 104]];
+  outline = '=Outline!';
   for (let i=0; i<=numOfSections; i++) {
-    let letter = cellInfo[i][0];
+    let section, row2;
+    let letter = cellInfo[0][i];
     if (i == 0) {
-      let section = 'Total';
+      section = 'Total';
+      row2 = cellInfo[1][0];
     } else {
-      let row1 = cellInfo[i][1];
-      let section = outlineSheet + letter + row1;
+      let row1 = cellInfo[num][0];
+      section = outline + letter + row1;
+      row2 = cellInfo[num][1]
     }
-    let row2 = cellInfo[i][2];
-    let points = outlineSheet + letter + row2;
+    let points = outline + letter + row2;
     sectionLetter.push(section);
     sectionPoints.push(points);
   }
@@ -66,9 +68,9 @@ function labelHeaders(outline, sheet) {
   sectionPoints.push('✓');
   if (numOfSections > 1) {
     let remainder = numOfSections % 2;
-    let e = cellInfo[0][2];
-    let nineteen = cellInfo[0][1];
-    let header = outlineSheet + e + nineteen;  // 'SECTIONS'
+    let e = cellInfo[0][6];
+    let nineteen = cellInfo[1][0];
+    let header = outline + e + nineteen;  // 'SECTIONS'
     if (remainder == 0) {  // if an even # of sections
       let column = 6 + (numOfSections / 2);
       sheet.getRange(1, column).setValue(header);
@@ -251,7 +253,7 @@ function formatOnCondition(outline, sheet, alreadyFilled) {
 // C5. format filled sheet
 function formatFilledSheet(outline, sheet) {
   let numOfSections = outline[16][0];
-  sheet.autoResizeColumns(6, sheet.getMaxColumns());
+  sheet.autoResizeColumns(6, sheet.getMaxColumns()-5);
   sheet.setColumnWidths(6, numOfSections+1, 60);
   let rows = sheet.getMaxRows();
   let firstStudentFormulas = sheet.getRange(4, 6, 1, numOfSections+1);
