@@ -1,98 +1,98 @@
-var ss = SpreadsheetApp.getActiveSpreadsheet();
-
-// B1. Delete sheets
+// B1. delete all sheets save for 'Outline' and 'Students'
 function clearAway(sheets) {
   if (sheets.length > 2) {  // if there are more than 2 sheets
-    for (var i=2; i<sheets.length; i++) {  // starting at index 2 (3rd sheet)
+    for (let i=2; i<sheets.length; i++) {  // starting at index 2 (3rd sheet)
       ss.deleteSheet(sheets[i]);  // delete the sheet
     }
   }
 }
 
-// B2. Create Formative 1 Page
-function createF1() {
-  var f1Title = getOutlineInfo()[2][18][0];
-  ss.insertSheet(f1Title, 2);  // insert sheet called "F1" after "Students"
-  var sheets = ss.getSheets();
-  populatef1(sheets);
-  formatSheet(sheets);
+// B2. create sheet called 'Formative 1'
+function createF1(alreadyCreated) {
+  let f1Title = getOutlineInfo()[2][18][0];  // 'Formative 1'
+  ss.insertSheet(f1Title, 2);
+  let sheets = ss.getSheets();
+  populateSheet(sheets);
+  formatSheet(sheets[2], alreadyCreated);
   return sheets;
 }
 
-// B3. Populate Formative 1 sheet
-function populatef1(sheets) { 
-  var students = sheets[1];
-  var f1 = sheets[2];
-  // 0 (per, sec num, end index), 1 (same w/ start index), 2 (irrelevant), 3-end (student info)
-  var rangeToCopy = students.getRange("A1").getDataRegion().getValues();  // student info
-  var studentInfo = rangeToCopy.slice(1);
-  var totClassLen = students.getLastRow()-1;
-  var maxRows = f1.getMaxRows();
-  var copyToRange = f1.getRange(4, 1, totClassLen, 5);
-  ss.setActiveSheet(f1);  // set "Formative 1" as active sheet
-  copyToRange.setValues(studentInfo);
+// B3. paste student info in sheet, make sheet active, freeze & group columns
+function populateSheet(sheets) { 
+  let students = sheets[1];
+  let f1 = sheets[2];
+  let rangeToCopy = students.getRange('A1').getDataRegion().getValues();
+  let studentInfo = rangeToCopy.slice(1);  // remove header row
+  let totalStudents = students.getLastRow() - 1;
+  let destination = f1.getRange(4, 1, totalStudents, 5);
+  ss.setActiveSheet(f1);   // set 'Formative 1' as active sheet
+  destination.setValues(studentInfo);
   f1.setFrozenColumns(6);  // freeze student info and % column
-  f1.setFrozenRows(3);  // freeze all rows with header
+  f1.setFrozenRows(3);     // freeze all header rows
   f1.setColumnGroupControlPosition(SpreadsheetApp.GroupControlTogglePosition.AFTER);
-  f1.getRange(1, 4, maxRows, 2).shiftColumnGroupDepth(3);
-  f1.getRange(1, 3, maxRows).shiftColumnGroupDepth(2);
-  f1.getRange(1, 1, maxRows, 2).shiftColumnGroupDepth(1);
-  var emptyRow = totClassLen+4;
-  f1.hideRows(emptyRow, maxRows-emptyRow+1);
+  let rows = f1.getMaxRows();
+  f1.getRange(1, 4, rows, 2).shiftColumnGroupDepth(3);  // group first & last names
+  f1.getRange(1, 3, rows).shiftColumnGroupDepth(2);     // group student ID
+  f1.getRange(1, 1, rows, 2).shiftColumnGroupDepth(1);  // group teacher & period
+  let firstEmptyRow = totalStudents + 4;
+  let allEmptyRows = rows - firstEmptyRow + 1;
+  f1.hideRows(firstEmptyRow, allEmptyRows);
 }
 
-// B4. Format sheet
-function formatSheet(sheets) {
-  var sheetName = sheets[0].getRange("D2").getValue();
-  var f1 = ss.getSheetByName(sheetName);
-  var rows = f1.getMaxRows();
-  var headers = ["Teacher", "P.", "ID", "First", "Last", "Total"];
-  var columns = f1.getMaxColumns();
-  var colour = findColour(ss.getSheets()[0]);
-  var defaultBanding = SpreadsheetApp.BandingTheme.LIGHT_GREY;
-  var bandingRange = f1.getRange(4, 1, f1.getLastRow(), columns);
-  f1.getRange(1, 1, 3, columns)  // change first 3 rows
-    .setFontColor("white")
+// B4. insert formatting, resize columns, & set tab colour 
+function formatSheet(sheet, alreadyCreated) {
+  let columns = sheet.getMaxColumns();
+  let colour = findColour(ss.getSheetByName('Outline'));
+  let lastRow = sheet.getLastRow();
+  let bandingRange = sheet.getRange(4, 1, lastRow, columns);
+  let first3Rows = sheet.getRange(1, 1, 3, columns);
+  let row2FromColumn6 = sheet.getRange(2, 6, 1, columns); 
+  let row3FromColumn6 = sheet.getRange(3, 6, 1, columns);
+  let headersRange = sheet.getRange(3, 1, 1, 5);
+  first3Rows.setBackground(colour.plain);
+  row2FromColumn6.setBackground(colour.deep);
+  row3FromColumn6.setBackground(colour.dark);
+  headersRange.setBackground(colour.deep);
+  if (alreadyCreated) {
+    bandingRange.setSecondRowColor(colour.lightest);
+  } else {
+    let headers = [['Teacher', 'P.', 'ID', 'First', 'Last']];  // nested for setValues()
+    let defaultBanding = SpreadsheetApp.BandingTheme.LIGHT_GREY;
+    bandingRange.applyRowBanding(defaultBanding, false, false)
+    .setSecondRowColor(colour.lightest);
+    first3Rows.setFontColor('white')
     .setFontSize(12)
-    .setFontWeight("bold")
-    .setBackground(colour.plain);
-  f1.getRange(2, 6, 1, columns)
-    .setBackground(colour.deep);  // change part of 2nd row deep colour
-  f1.getRange(3, 6, 1, columns)
-    .setBackground(colour.dark);  // change part of 3rd row dark colour
-  f1.getRange(3, 1, 1, 5).setFontSize(10).setBackground(colour.deep);  // change 3rd row
-  bandingRange.applyRowBanding(defaultBanding, false, false)
-              .setSecondRowColor(colour.lightest);
-  f1.getRange(4, 22, rows, 5).copyTo(f1.getRange(4, 27, rows, 5));
-  columns = f1.getMaxColumns();
-  f1.getRange(1, 1, rows, columns)
-    .setHorizontalAlignment("center");  // center all text
-  f1.getRange(1, 4, rows, 2)
-    .setHorizontalAlignment("left");  // except in D:E
-  for (var i=1; i<headers.length; i++) {
-    f1.getRange(3, i).setValue(headers[i-1]);  // get column-3 and set it to headers[i-1]
+    .setFontWeight('bold')
+    headersRange.setFontSize(10)
+    .setValues(headers);
+    let rows = sheet.getMaxRows();
+//    sheet.getRange(4, 22, rows, 5).copyTo(sheet.getRange(4, 27, rows, 5)); NECESSARY WITH MATCHROWS() ?
+//    columns = sheet.getMacColumns();
+    sheet.getRange(1, 1, rows, columns)  // all cells
+    .setHorizontalAlignment('center');
+    sheet.getRange(1, 4, rows, 2)        // except for names (D:E)
+    .setHorizontalAlignment('left');
+    sheet.autoResizeColumns(1, 5);       // resize header columns (first 5)
+    sheet.setColumnWidth(2, 20);         // widen peiod column to better see filter
+    sheet.setTabColor(colour.deep);
   }
-  f1.getRange(2, 6).setValue(headers[5]);
-  f1.autoResizeColumns(1, 5);
-  f1.setTabColor(colour.deep);
 }
 
-// B5. Create formative and summative calculation sheets based on info in the "Assessments" sheet
-function createFormativeSheets() {
-  var sheets = ss.getSheets();
+// B5. Create formative and summative sheets based on info in 'Outline'
+function createFormativeSheets(sheets) {
   ss.setActiveSheet(sheets[2]);
-  var colour = findColour(sheets[0]);
-  var names = sheets[0].getRange("A8").getDataRegion(SpreadsheetApp.Dimension.ROWS)
-                       .getValues().slice(6);
-  names.forEach(function(name) {
-    var len = sheets.length;
-    SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet();  // duplicate "F1"
-    sheets = ss.getSheets();
-    var sheet = sheets[len];  // get new duplicated sheet
-    sheet.setName(name);  // name it the table title
-    if (name == "Summative") {
-      sheet.setTabColor(colour.dark);
+  let colour = findColour(sheets[0]);
+  let names = sheets[0].getRange('A8:A11').getValues();  // assessments after 'Formative 1'
+  for (let name of names) {
+    console.log('Name: ' + name + ' of ' + names);
+    if (name !== '') {
+      let len = sheets.length;
+      SpreadsheetApp.getActiveSpreadsheet().duplicateActiveSheet();  // duplicate 'F1'
+      sheets = ss.getSheets();
+      let sheet = sheets[len];  // get new duplicated sheet
+      sheet.setName(name);  // name it the table title
+      if (name == 'Summative') sheet.setTabColor(colour.dark);
     }
-  })
-  ss.getSheetByName("Outline").activate();
+  }
+  ss.getSheetByName('Outline').activate();
 }
