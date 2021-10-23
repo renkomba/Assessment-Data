@@ -3,8 +3,7 @@ function ungroup(outline) {
   let rows = [23, 44, 65, 86];
   rows.forEach(function(row) {
     let triggerRange = outline.getRange(row, 1);
-    let trigger = triggerRange.getValue();
-    let title = outline.getRange(row+1, 3).getValue();
+    let [trigger, title] = [triggerRange.getValue(), outline.getRange(row+1, 3).getValue()];
     if (trigger == 'grouped' && title == '#') {  // if row is grouped
       let group = outline.getRowGroup(row+1, 1);
       group.remove();
@@ -26,11 +25,8 @@ function clean(outline) {
 
 // A3. create outline table for each outline or change the formatting of all tables
 function spawnOutlines(outline, format) {
-  let row = 23;
-  let colour = findColour(outline);
-  let info = outline.getRange('B2:D2').getValues();
-  let numOfAssessments = info[0][0];
-  let header = info[0][2];  // 'Formative 1' header;
+  let [row, colour, info] = [23, findColour(outline), outline.getRange('B2:D2').getValues()];
+  let [numOfAssessments, header] = [info[0][0], info[0][2]];  // header = 'Formative 1' header;
   let rangeToCopy = outline.getNamedRanges()[0].getRange();  // C2:M22
   for (let i=0; i<numOfAssessments; i++) {
     if (format) {
@@ -56,7 +52,6 @@ function spawnOutlines(outline, format) {
 
 // A4. hide blank rows
 function hideInOutline(outline) {
-  let bottomRow = outline.getLastRow();
-  let rows = outline.getMaxRows();
+  let [bottomRow, rows] = [outline.getLastRow(), outline.getMaxRows()];
   outline.hideRows(bottomRow+1, rows-bottomRow);
 }
