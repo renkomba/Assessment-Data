@@ -1,26 +1,19 @@
 function onEdit(e) {
-  let activeSheet = e.source.getActiveSheet();
-  let tabs = ['Outline'];
+  let [activeSheet, tabs] = [e.source.getActiveSheet(), ['Outline']];
   if (tabs.indexOf(activeSheet.getName()) !== -1) {  // if Outline sheet
     showCreator(activeSheet);
-    let columns = [2, 3];
-    let cell = e.range;
-    let column = cell.getColumn();
-    let row = cell.getRow();
+    let [columns, cell] = [[2, 3], e.range];
+    let [column, row] = [cell.getColumn(), cell.getRow()];
     if (columns.indexOf(column) == 0) {  // if column 'B'
       if (row == 2) {  // if new # of formatives
-        if (cell != '- - - - -') {
-          setupOutline(activeSheet);
-        }
+        if (cell != '- - - - -') setupOutline(activeSheet);
       } else if (row == 3) {  // if new colour
         changeColour(activeSheet);
         if (!activeSheet.getRange('D23').isBlank()) {  // if outline already set up
           spawnOutlines(activeSheet, true);  // copy formatting down
         }
       } else if (row == 5) {  // if ready to create
-        if (e.value == 'TRUE') {
-          setupAssessments();
-        }
+        if (e.value == 'TRUE') setupAssessments();
       }
     } else if (columns.indexOf(column) == 1) {  // if column 'C'
       if (e.value == 'TRUE') {  // if box is checked
@@ -54,8 +47,7 @@ function setupOutline(outline) {
 
 // B. create 'Formative 1' & use as template for other assessment sheets.
 function setupAssessments() {
-  let sheets = ss.getSheets();
-  clearAway(sheets);  // remove every sheet save for 'Outline' & 'Students'
+  clearAway(ss.getSheets());  // remove every sheet save for 'Outline' & 'Students'
   createFormativeSheets(createF1());
 }
 
@@ -69,8 +61,7 @@ function fill(sheetName) {
 
 // D. change colours in 'Outline' sheet
 function changeColour(outline) {
-  let students = ss.getSheets()[1];
-  let colour = findColour(outline);
+  let [students, colour] = [ss.getSheets()[1], findColour(outline)];
   console.log('The colour is ${colour}.');
   outline.setTabColor(colour.light);
   students.setTabColor(colour.light);
