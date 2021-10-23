@@ -1,17 +1,13 @@
 // C1. get an index to pull correctly from arrays for each sheet
 function getIndex(sheetName) {
   let outline = ss.getSheets()[0];
-  if (sheetName == 'Summative') {
-    return outline.getRange('B2').getValue();
-  } else {
-    return sheetName.slice(10)-1;  // turn formative number into int
+  return sheetName == 'Summative' ? outline.getRange('B2').getValue() : sheetName.slice(10)-1;  // FALSE: turn formative number into int
   }
 }
 
 // C2. get the proper amount of colums
 function matchColumns(sheetName, num) {
-  let sheet = ss.getSheetByName(sheetName);
-  let outline = getOutlineInfo();
+  let [sheet, outline] = [ss.getSheetByName(sheetName), getOutlineInfo()];
   let neededColumns = outline[num+2][17][6];  // the number of columns needed per test
   let currentColumns = sheet.getMaxColumns(); // find how many columns in the sheet
   let rows = sheet.getMaxRows();
